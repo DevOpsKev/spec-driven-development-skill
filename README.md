@@ -17,6 +17,7 @@ This isn't theory. Every principle in this skill was learned by hitting the prob
 - 📖 [sddbook.com](https://sddbook.com) — The book on SDD
 - 🌐 [kevinryan.io](https://kevinryan.io) — Author's website
 - 📦 [Tessl Registry](https://tessl.io/registry) — Browse and install the skill
+- 💻 [GitHub](https://github.com/DevOpsKev/spec-driven-development-skill) — Source repository
 
 ---
 
@@ -74,11 +75,19 @@ This creates a `.tessl/` directory and configures your agent. You will be prompt
 
 ### Step 4: Install the skill
 
+**From the Tessl Registry:**
+
 ```bash
 tessl install kevin-ryan-io/spec-driven-development
 ```
 
-Alternatively, install a specific version:
+**From GitHub:**
+
+```bash
+tessl install github:DevOpsKev/spec-driven-development-skill
+```
+
+Alternatively, install a specific version from the registry:
 
 ```bash
 tessl install kevin-ryan-io/spec-driven-development@1.0.0

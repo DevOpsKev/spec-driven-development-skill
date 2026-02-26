@@ -1,313 +1,227 @@
+---
+name: spec-driven-development
+description: "Creates structured specifications, validates execution plans against specs, manages two-loop planning-to-execution workflows with decision gates, and captures provenance of AI-generated work. Use when building software with AI coding agents, when starting any non-trivial feature or change, when an agent keeps building the wrong thing, when you want repeatable and verifiable AI-assisted development, or when someone mentions spec-driven, SDD, specification first, or code is a side effect. Also use when the user wants to structure agent workflows, create specifications, establish decision gates between planning and execution, or capture provenance."
+license: CC-BY-4.0
+compatibility: Designed for Claude Code, Cursor, Windsurf, or any MCP-compatible agent
+metadata:
+  author: Kevin Ryan
+  version: "1.1.0"
+---
+
 # Spec-Driven Development
 
-**A practitioner methodology for AI-native software engineering where specifications — not code — are the primary artifact.**
+Specifications are the primary artifact. Code is a generated side effect.
+
+This skill teaches agents the full SDD workflow: how to write specifications,
+how to execute them through a two-loop process with explicit decision gates,
+and how to capture provenance of every execution.
+
+## Core Concept
+
+The specification carries the intent. The prompt is just the trigger.
+If your prompt needs to explain the work, your spec is deficient.
+
+The human spends cognitive budget on specifications. The agent spends compute
+on execution. Cognitive budget replaces developer-hours as the primary
+constraint.
+
+## The Two Loops
+
+SDD has two loops with nine steps. The first loop is creative work — this is
+where cognitive budget is spent. The second loop is mechanical — it should be
+boring.
+
+### The Spec Loop (creative)
+
+1. **Brief** — human intent as bullet points, rough shape. The brief is the
+   spec for the spec. This is where you think.
+2. **Spec draft** — agent expands the brief into a full specification. The
+   spec is the precise, complete document an agent can execute without
+   further context.
+3. **Iterate spec** — review, refine, catch gaps. Rewriting a spec is
+   iteration, not rework.
+4. **Commit spec to main** — the spec is the artifact. It is done. It is
+   reviewable. It is the source of truth.
+
+### The Execution Loop (mechanical)
+
+5. **Plan** — agent reads spec, produces an execution plan. The plan
+   validates the spec against the current state of the codebase.
+6. **Validate plan against spec** — THE CRITICAL DECISION GATE. Does the
+   plan reveal spec bugs? If yes: fix the spec (return to step 3), discard
+   the plan. Do not patch the plan. The plan is disposable. The spec is the
+   artifact.
+7. **Execute** — the prompt should be minimal: "Execute spec X." If you are
+   adding context, caveats, or instructions, your spec has holes.
+8. **Validate results** — mandatory checks defined in the spec. Every check
+   is mandatory. Do not skip any.
+9. **Write provenance** — document what happened. Which spec was executed,
+   what plan was produced, what deviations occurred, what the outcome was.
+   Overwrite the provenance file (do not append). This is not optional.
+   Every spec execution produces a provenance record.
+
+### The Step 6 Decision Gate
+
+The plan reveals problems that would cost a full re-execution to fix if
+caught later.
+
+When the plan reveals a spec deficiency:
+
+- Fix the spec, not the plan
+- Discard the plan entirely
+- Generate a fresh plan from the updated spec
+
+When the plan has a bug but the spec is clear:
+
+- Fix the plan with a minimal correction prompt
+- Document the deviation
+
+The whole execution should be three prompts: "create a plan," a brief
+correction after plan review, and "execute." If it takes more, your spec
+has holes or your plan review is not catching enough.
+
+## Spec Format
+
+A specification must be executable by a fresh agent with no prior conversation
+context. Test this: can someone who has never seen your project execute from
+the spec alone?
 
-Most AI coding workflows are variations on the same theme: prompt, hope, patch, repeat. When it works, it feels like magic. When it doesn't, you're debugging code you didn't write, can't verify against requirements that were never written down, and burning hours on error recovery instead of building.
+### Required Sections
+
+- **Purpose** — one sentence. What this spec produces.
+- **Prerequisites** — what the agent must load or verify before starting.
+  Name specific skills, context files, or tools.
+- **Context** — why this spec exists. Brief, not a novel.
+- **Changes** — numbered steps. Each step is an instruction, not a wish.
+  Be prescriptive about what, principled about how.
+- **Out of Scope** — explicit boundaries. Without this, agents expand scope.
+  They update documentation you did not ask for, refactor code that was not
+  in the spec, and add features that seemed related.
+- **Verification** — mandatory checks. Write: "Every check below is
+  mandatory. Do not skip any." Include both positive tests (what must exist)
+  and negative tests (what must not exist). If you cannot write a concrete
+  check, you do not know what success looks like.
+- **Branch** — the branch naming convention for this execution.
+- **Provenance** — the file path where the provenance record for this
+  execution must be written. Use a consistent convention, e.g.
+  `specs/provenance/<category>/<spec-name>.provenance.md`. Overwrite
+  semantics — each execution replaces the previous record. Use
+  `git log --follow` to recover history.
+
+### Spec Principles
+
+State conventions explicitly. Never assume an agent knows a convention. If
+provenance files should be overwritten not appended, say so. If tools must
+return error strings not raise exceptions, say so.
+
+Single source of truth — always. If you know two sources of truth is wrong,
+fix it now. Do not defer unification to a "future spec."
+
+Keep specs focused. If a spec has more than roughly ten changes, it probably
+wants to be two specs.
+
+See [the principles reference](references/principles.md) for the full set of
+practitioner-discovered principles with explanations.
 
-Spec-Driven Development (SDD) inverts this. You spend your cognitive budget on specifications — structured documents that capture intent, define scope, and include mandatory verification checks. The agent spends compute on execution. The specification is the artifact. Code is a side effect.
-
-This skill teaches AI coding agents the full SDD methodology: a two-loop workflow with nine steps, an explicit decision gate between planning and execution, four types of structured context, provenance tracking, and a library of practitioner-discovered principles and anti-patterns. It was developed through months of real production use — building an [entire book about the methodology](https://sddbook.com) using the methodology itself.
-
-This isn't theory. Every principle in this skill was learned by hitting the problem it prevents.
-
-**Author:** [Kevin Ryan](https://kevinryan.io) — DevOps and Platform Engineering specialist with 30 years of experience delivering for enterprise clients. Currently writing *Specification Driven Development: AI Native Software Engineering*.
-
-**Links:**
-
-- 📖 [sddbook.com](https://sddbook.com) — The book on SDD
-- 🌐 [kevinryan.io](https://kevinryan.io) — Author's website
-- 📦 [Tessl Registry](https://tessl.io/registry) — Browse and install the skill
-
----
-
-## What's in This Skill
-
-```text
-spec-driven-development/
-├── SKILL.md                          # Core methodology (234 lines)
-├── tile.json                         # Tessl package manifest
-├── LICENSE                           # CC-BY-4.0
-└── references/
-    ├── principles.md                 # 18 practitioner-discovered principles
-    └── anti-patterns.md              # 6 spec failure modes with fixes
-```
-
-| File | What it teaches the agent |
-|------|--------------------------|
-| **SKILL.md** | The two-loop workflow, step 6 decision gate, spec format, four context types, provenance, and when NOT to use SDD |
-| **references/principles.md** | Deep explanations of every principle — "the spec is cheap, execution is expensive", "the bug is always in the spec", "mandatory means mandatory", and 15 more |
-| **references/anti-patterns.md** | How to diagnose and fix broken specs — the novel spec, the implicit spec, the mega-spec, the unverifiable spec, the deferred debt spec, the prompt-dependent spec |
-
-The skill uses progressive disclosure as recommended by the [Agent Skills Specification](https://agentskills.io/specification). The `name` and `description` frontmatter is loaded at startup for skill discovery (~100 tokens). The full SKILL.md body is loaded when activated (<500 lines). Reference files are loaded only when the agent needs deeper context.
-
----
-
-## Installing the Skill
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (for the Tessl CLI)
-- A Tessl account ([sign up free](https://tessl.io/signup))
-- An MCP-compatible coding agent (Claude Code, Cursor, Windsurf, etc.)
-
-### Step 1: Install Tessl CLI
-
-```bash
-npm install -g @tessl/cli
-```
-
-### Step 2: Authenticate
-
-```bash
-tessl login
-```
-
-### Step 3: Initialise Tessl in your project
-
-From your project's root directory:
-
-```bash
-tessl init
-```
-
-This creates a `.tessl/` directory and configures your agent. You will be prompted to select your agent platform (Claude Code, Cursor, etc.). Accept the defaults unless you have specific requirements.
-
-### Step 4: Install the skill
-
-```bash
-tessl install kevin-ryan-io/spec-driven-development
-```
-
-Alternatively, install a specific version:
-
-```bash
-tessl install kevin-ryan-io/spec-driven-development@1.0.0
-```
-
-### Step 5: Verify installation
-
-The skill is now available to your agent. You can verify by checking:
-
-```bash
-ls .tessl/tiles/
-```
-
-You should see the skill's directory with `SKILL.md` and the `references/` folder.
-
-### Updating
-
-When new versions are published, update with:
-
-```bash
-tessl install kevin-ryan-io/spec-driven-development
-```
-
-This fetches the latest version automatically.
-
----
-
-## Using the Skill
-
-Once installed, the skill activates automatically when your agent detects relevant context — starting a new feature, structuring a development workflow, or when you explicitly reference spec-driven development.
-
-### Quick Start: Your First Spec
-
-Include "use spec-driven development" in your prompt:
-
-```text
-I need to add user authentication to this project. Use spec-driven development.
-```
-
-The agent will follow the SDD workflow:
-
-1. Ask clarifying questions to build a brief
-2. Expand the brief into a full specification
-3. Present the spec for your review and iteration
-4. Execute in plan mode first
-5. Present the plan for validation (the step 6 decision gate)
-6. Execute only after approval
-7. Validate results against the spec's mandatory checks
-8. Write the provenance record documenting the execution
-
-### The Decision Gate in Practice
-
-The most important moment in any SDD execution is step 6 — reviewing the plan. When the agent presents a plan, ask yourself:
-
-- Does the plan reveal anything missing from the spec?
-- Are all verification checks from the spec present in the plan?
-- Has the agent reduced scope or skipped requirements?
-
-If the plan reveals a spec problem, tell the agent to update the spec and regenerate the plan. Do not patch the plan directly. The spec is the artifact.
-
-### When to Use SDD
-
-SDD works best for:
-
-- Build pipelines and infrastructure
-- Data contracts and API definitions
-- Repeatable generation tasks (READMEs, documentation, configuration)
-- Any task where you need to verify the output against explicit requirements
-- Multi-step features where the agent needs structured guidance
-
-### When NOT to Use SDD
-
-Not everything benefits from specification. Skip SDD when:
-
-- You are writing pure creative content (a blog post, a preface)
-- The task is simple enough that a single prompt handles it
-- You are the entire loop — intent, creation, and validation
-- Adding a spec would be ceremony, not value
-
----
-
-## Publishing the Skill to Tessl
-
-If you want to publish your own version of this skill (or fork and customise it), follow these steps.
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/)
-- Tessl CLI installed: `npm install -g @tessl/cli`
-- A Tessl account: `tessl login`
-
-### Step 1: Create a workspace
-
-```bash
-tessl workspace create
-```
-
-Follow the prompts to name your workspace. This becomes your publisher prefix (e.g. `kevin-ryan-io/spec-driven-development`).
-
-### Step 2: Update tile.json
-
-Edit `tile.json` and replace the workspace placeholder with your workspace name:
-
-```json
-{
-  "name": "kevin-ryan-io/spec-driven-development",
-  "version": "1.0.0",
-  "summary": "A practitioner methodology for AI-native software engineering where specifications are the primary artifact and code is a generated side effect.",
-  "private": false,
-  "skills": {
-    "spec-driven-development": {
-      "path": "SKILL.md"
-    }
-  }
-}
-```
-
-### Step 3: Validate structure
-
-Lint checks the skill's structure and frontmatter against the Agent Skills specification:
-
-```bash
-tessl skill lint .
-```
-
-Fix any errors before proceeding.
-
-### Step 4: Review against best practices
-
-The review command scores your skill against Anthropic's best practices for agent consumption:
-
-```bash
-tessl skill review .
-```
-
-This checks description quality, content actionability, progressive disclosure, and conciseness. Address any warnings or suggestions — higher scores mean better discoverability in the Tessl Registry.
-
-### Step 5: Create evaluation scenarios
-
-Evaluation scenarios test whether the skill actually changes agent behaviour. Generate them automatically:
-
-```bash
-tessl skill eval generate .
-```
-
-This creates an `evals/` directory with scenario files. Review and edit these — you are the authority on what success looks like for your skill. Each scenario contains:
-
-- `task.md` — a task the agent should perform
-- `criteria.json` — what success looks like
-- `capability.txt` — which skill capability is being tested
-
-### Step 6: Run evaluations
-
-```bash
-tessl skill eval run .
-```
-
-This runs agents with and without the skill on your scenarios and scores the results. You will receive a URL to monitor progress and view results in the Tessl web UI.
-
-### Step 7: Publish (private)
-
-Publish as private first to test with your own team:
-
-```bash
-tessl skill publish .
-```
-
-By default, skills are published as private — only members of your workspace can install them.
-
-### Step 8: Test the published skill
-
-Install your published skill in a test project:
-
-```bash
-tessl install kevin-ryan-io/spec-driven-development
-```
-
-Run a real task using SDD to confirm the skill activates correctly and the agent follows the methodology.
-
-### Step 9: Make it public
-
-Once you are satisfied with the skill's quality:
-
-1. Go to the [Tessl Registry](https://tessl.io/registry) in your browser
-2. Navigate to your workspace and find your skill
-3. Click on the skill to view its details
-4. Select **Actions** → **Make Public**
-5. Click **Request to Make Public**
-
-Tessl will review and contact you about the status. Once approved, republish:
-
-```bash
-tessl skill publish . --public
-```
-
-### Publishing updates
-
-When you update the skill:
-
-1. Edit `SKILL.md` or the reference files
-2. Increment the version in `tile.json` following [semantic versioning](https://semver.org/):
-   - **Patch** (1.0.0 → 1.0.1): typo fixes, clarifications
-   - **Minor** (1.0.0 → 1.1.0): new principles, new sections, backward-compatible additions
-   - **Major** (1.0.0 → 2.0.0): restructured workflow, breaking changes to methodology
-3. Validate: `tessl skill lint .`
-4. Publish: `tessl skill publish .`
-
-Users update to the latest version with:
-
-```bash
-tessl install kevin-ryan-io/spec-driven-development
-```
-
----
-
-## The Book
-
-This skill is a companion to *Specification Driven Development: AI Native Software Engineering* by Kevin Ryan.
-
-The book covers the full methodology in depth — the history, the theory, the practice, case studies, and the emerging ecosystem of spec-driven tools. The skill is the machine-readable distillation; the book is the human-readable explanation.
-
-The book itself was built using SDD. The repository that produces it demonstrates the methodology through visible infrastructure: specifications, provenance files, MCP servers, and a CI/CD pipeline that generates multiple formats from the same source. The commit hash on the repository matches the commit hash on the book's copyright page. Full provenance from source to artifact, verifiable by anyone.
-
-📖 **[sddbook.com](https://sddbook.com)**
-
----
-
-## Licence
-
-This work is licensed under [Creative Commons Attribution 4.0 International (CC-BY-4.0)](http://creativecommons.org/licenses/by/4.0/).
-
-You are free to share and adapt this material for any purpose, including commercially, as long as you give appropriate attribution.
+## The Four Types of Context
+
+Every piece of context an agent loads falls into one of four categories.
+When the executor is an AI agent, you cannot rely on tribal knowledge — you
+must make all four types explicit, structured, and machine-readable.
+
+| Type | Definition | Contains |
+|------|-----------|----------|
+| **Intent** | What needs to happen | Specifications, briefs, task definitions |
+| **Method** | How to do it well | Skills, guides, frameworks, best practices |
+| **Brand** | What it must look and sound like | Voice, design tokens, style constraints |
+| **State** | What has already happened | Glossaries, continuity tracking, decision logs |
+
+This maps to how anyone approaches work: what am I doing, how should I do it,
+what are the guardrails, and what has already been done.
+
+The agent is the orchestrator. All four context sources are peers — passive
+resource providers. No context source calls another. The agent reads the spec,
+sees "load the X skill," and the agent fetches it. The spec is instructions.
+The context sources are the filing cabinets. The agent is the person walking
+between them.
+
+## Provenance
+
+Every spec execution produces a provenance record. Provenance is a side
+effect of the process, not extra work.
+
+A provenance file documents:
+
+- Which spec was executed
+- What plan was produced
+- What deviations occurred (and why)
+- What the outcome was
+- What was learned
+
+Provenance files are overwritten on re-execution, not appended.
+`git log --follow` on the provenance file gives the full evolution — spec
+changes, execution changes, failures and fixes — a narrative arc built into
+version control.
+
+Deviations are not failures. Hidden deviations are. If the agent goes
+off-spec, the provenance file is the place to be honest. Log deviations,
+do not hide them.
+
+## When NOT to Use SDD
+
+Not everything is a spec. If the human is the entire loop — intent, creation,
+and validation — a spec adds ceremony, not value.
+
+Ask: "Is there work here that benefits from specification?" If yes, spec it.
+If the human is the entire creative loop, just do the work. No spec, no
+provenance. Do not cargo-cult the methodology.
+
+Your entire solution does not need to be SDD. Apply it to the slice that
+benefits from specification rigour — build pipelines, infrastructure, data
+contracts, repeatable generation tasks. Ship the rest normally.
+
+## Spec Anti-Patterns
+
+See [the anti-patterns reference](references/anti-patterns.md) for detailed
+descriptions. In summary, watch for:
+
+- **The novel spec** — reads like a design document. Specs are instructions,
+  not essays.
+- **The implicit spec** — assumes the agent knows things it has not been told.
+  "Follow our usual conventions" is not a requirement.
+- **The mega-spec** — tries to do too much. Split it.
+- **The unverifiable spec** — no verification section, or vague checks like
+  "ensure it works."
+- **The deferred debt spec** — knowingly creates a problem and adds "future
+  spec" to fix it. If you know it is wrong now, fix it now.
+- **The prompt-dependent spec** — only works if the execution prompt adds
+  extra context.
+
+## Applying SDD to an Existing Project
+
+When adopting SDD on an existing codebase:
+
+1. Start with one well-understood feature or infrastructure task.
+2. Write a brief — bullet points capturing your intent.
+3. Expand the brief into a full spec following the format above.
+4. Execute in plan mode first. Review the plan. Fix the spec if needed.
+5. Execute. Validate against the spec's mandatory checks.
+6. Write the provenance file.
+7. Review what you learned. The first spec is always the hardest. Each
+   subsequent spec benefits from the patterns established by the ones
+   before it.
+
+Velocity compounds. The first spec takes the longest. The third is
+dramatically faster. Each layer of specification, skill, and structured
+context reduces the cognitive load for every subsequent task.
+
+## Key Principles
+
+See [the principles reference](references/principles.md) for the full set
+with explanations. The most important:
+
+- The spec is cheap, execution is expensive.
+- If your prompt needs to explain the work, your spec is deficient.
+- The bug is always in the spec.
+- When the plan reveals a spec bug, fix the spec — not the plan.
+- Deviations are not failures. Hidden deviations are.

@@ -90,7 +90,7 @@ tessl install github:DevOpsKev/spec-driven-development-skill
 Alternatively, install a specific version from the registry:
 
 ```bash
-tessl install kevin-ryan-io/spec-driven-development@1.0.0
+tessl install kevin-ryan-io/spec-driven-development@1.1.0
 ```
 
 ### Step 5: Verify installation
